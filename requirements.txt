@@ -1,0 +1,14 @@
+requests
+psycopg2-binary
+python-dotenv
+pandas
+numpy
+scikit-learn
+lightgbm
+optuna
+mlflow
+statsmodels
+fastapi
+uvicorn
+jinja2
+pytest
