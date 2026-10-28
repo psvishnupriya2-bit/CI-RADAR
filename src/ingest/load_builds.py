@@ -1,5 +1,5 @@
+import calendar
 import os
-import sys
 from datetime import datetime
 
 import psycopg2
@@ -9,10 +9,15 @@ from src.ingest.github_client import get, runs_in_window
 
 load_dotenv()
 
-REPOS = ["pandas-dev/pandas", "scikit-learn/scikit-learn", "numpy/numpy"]
-START = "2025-09-01"
-END = "2025-09-30"
+REPOS = [
+    "pandas-dev/pandas",
+    "scikit-learn/scikit-learn",
+    "numpy/numpy",
+    "pallets/flask",
+]
 
+# (year, month) pairs. One search per month keeps each one under GitHub's 1000-run limit.
+MONTHS = [(2026, 3), (2026, 4), (2026, 5), (2026, 6), (2026, 7), (2026, 8)]
 
 
 def connect():
@@ -23,6 +28,11 @@ def parse_time(value):
     if not value:
         return None
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+
+def month_window(year, month):
+    last_day = calendar.monthrange(year, month)[1]
+    return f"{year}-{month:02d}-01", f"{year}-{month:02d}-{last_day:02d}"
 
 
 def save_repo(cur, repo):
@@ -38,9 +48,9 @@ def save_repo(cur, repo):
     return info["id"]
 
 
-def save_builds(cur, repo, repo_id):
+def save_builds(cur, repo, repo_id, start, end):
     count = 0
-    for run in runs_in_window(repo, START, END):
+    for run in runs_in_window(repo, start, end):
         if run["conclusion"] not in ("success", "failure"):
             continue
         started = parse_time(run.get("run_started_at"))
@@ -80,11 +90,13 @@ def main():
     conn = connect()
     cur = conn.cursor()
     for repo in REPOS:
-        print(f"Loading {repo} ...")
         repo_id = save_repo(cur, repo)
-        n = save_builds(cur, repo, repo_id)
         conn.commit()
-        print(f"  done: {n} builds processed")
+        for year, month in MONTHS:
+            start, end = month_window(year, month)
+            n = save_builds(cur, repo, repo_id, start, end)
+            conn.commit()
+            print(f"{repo} {start[:7]}: {n} builds processed", flush=True)
     cur.close()
     conn.close()
 
