@@ -2,7 +2,10 @@
 import mlflow.lightgbm
 import pandas as pd
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
+
+from src.models.anomaly import find_slow_builds
 
 mlflow.set_tracking_uri("sqlite:///mlflow.db")
 MODEL = mlflow.lightgbm.load_model("models:/ci-radar-risk@production")
@@ -44,3 +47,52 @@ def predict(b: Build):
     risk = float(MODEL.predict(pd.DataFrame([row])[FEATURES])[0])
     label = "high" if risk >= 0.3 else "medium" if risk >= 0.15 else "low"
     return {"risk": round(risk, 3), "label": label}
+
+
+@app.get("/alerts")
+def alerts():
+    df = find_slow_builds()
+    top = df[df["slow_alert"]].sort_values("ratio", ascending=False).head(15)
+    top = top[["repo", "started_at", "duration_s", "median_prior", "ratio"]].copy()
+    top["started_at"] = top["started_at"].astype(str)
+    return top.round(1).to_dict(orient="records")
+
+
+PAGE = """
+<html><head><title>CI Radar</title>
+<style>body{font-family:sans-serif;max-width:800px;margin:30px auto}
+td,th{border-bottom:1px solid #ccc;padding:4px 8px;text-align:left}</style></head>
+<body>
+<h1>CI Radar</h1>
+<h2>Failure risk</h2>
+Repo <select id="repo"><option>pandas-dev/pandas</option><option>numpy/numpy</option>
+<option>pallets/flask</option><option>scikit-learn/scikit-learn</option></select>
+Recent failure rate (0 to 1) <input id="rate" value="0.1" size="4">
+Pull request? <select id="pr"><option value="0">no</option><option value="1">yes</option></select>
+<button onclick="go()">Predict</button>
+<p id="out"></p>
+<h2>Slow-build alerts</h2>
+<table id="tbl"></table>
+<script>
+async function go(){
+  const r=parseFloat(document.getElementById('rate').value);
+  const body={repo:document.getElementById('repo').value,fail_rate_last10:r,
+    fail_rate_last50:r,is_pr:parseInt(document.getElementById('pr').value)};
+  const res=await fetch('/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const d=await res.json();
+  document.getElementById('out').innerText='Risk: '+d.risk+' ('+d.label+')';
+}
+async function load(){
+  const res=await fetch('/alerts'); const rows=await res.json();
+  let h='<tr><th>Repo</th><th>Started</th><th>Seconds</th><th>Usual</th><th>Ratio</th></tr>';
+  for(const r of rows){h+='<tr><td>'+r.repo+'</td><td>'+r.started_at+'</td><td>'+r.duration_s+'</td><td>'+r.median_prior+'</td><td>'+r.ratio+'</td></tr>';}
+  document.getElementById('tbl').innerHTML=h;
+}
+load();
+</script></body></html>
+"""
+
+
+@app.get("/", response_class=HTMLResponse)
+def home():
+    return PAGE
