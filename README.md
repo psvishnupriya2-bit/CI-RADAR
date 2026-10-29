@@ -2,9 +2,7 @@
 
 Predicts failing builds and flags unusually slow builds for public GitHub projects (pandas, numpy, scikit-learn, flask).
 
-Live demo: YOUR-RENDER-LINK
-The live demo runs on a free instance, so the first load after a pause can take about a minute.
-
+Live demo: https://ci-radar.onrender.com
 ## Data
 - Source: GitHub Actions API, March to August 2026, 4 repos
 - 13,886 builds, 1,409 failures (10.1%), stored in Postgres
