@@ -1,4 +1,4 @@
-import calendar
+﻿import calendar
 import os
 from datetime import datetime
 
@@ -82,6 +82,7 @@ def save_builds(cur, repo, repo_id, start, end):
                 author,
             ),
         )
+        cur.execute("UPDATE builds SET workflow_name = %s WHERE build_id = %s", (run.get("name"), run["id"]))
         count += 1
     return count
 
