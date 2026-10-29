@@ -1,0 +1,96 @@
+﻿<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CI Radar</title>
+<style>
+:root{--bg:#f3f5f9;--card:#fff;--text:#161c2b;--muted:#657089;--line:#e3e7ef;--accent:#4f46e5;--low:#16a34a;--med:#d97706;--high:#dc2626}
+@media (prefers-color-scheme:dark){:root{--bg:#0d1018;--card:#161b26;--text:#e9ecf4;--muted:#97a0b6;--line:#252c3a;--accent:#8b93ff}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:28px 32px;background:linear-gradient(120deg,#312e81,#4f46e5 55%,#7c3aed);color:#fff}
+header h1{margin:0;font-size:26px;letter-spacing:-.01em}
+header p{margin:4px 0 0;opacity:.85;font-size:14px}
+main{max-width:1100px;margin:-24px auto 0;padding:0 24px 48px}
+.grid{display:grid;gap:16px}
+.kpis{grid-template-columns:repeat(auto-fit,minmax(210px,1fr));margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;box-shadow:0 2px 10px rgba(20,24,40,.06)}
+.kpi{border-top:4px solid var(--accent)}
+.kpi:nth-child(2){border-top-color:var(--high)}
+.kpi:nth-child(3){border-top-color:var(--low)}
+.kpi:nth-child(4){border-top-color:var(--med)}
+.kpi small{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.kpi b{display:block;font-size:30px;margin-top:4px}
+.kpi em{font-style:normal;color:var(--muted);font-size:13px}
+h2{font-size:17px;margin:0 0 16px}
+.row{display:flex;flex-wrap:wrap;gap:18px;align-items:end;margin-bottom:16px}
+label{display:flex;flex-direction:column;font-size:12px;color:var(--muted);gap:5px}
+select{font:inherit;color:var(--text);padding:9px 12px;border:1px solid var(--line);border-radius:9px;background:var(--card)}
+.check{flex-direction:row;align-items:center;gap:7px;font-size:14px;color:var(--text)}
+button{background:var(--accent);color:#fff;border:0;border-radius:9px;padding:11px 22px;font:inherit;font-weight:600;cursor:pointer}
+button:hover{opacity:.9}
+.result{display:flex;align-items:center;gap:14px}
+.result b{font-size:40px;letter-spacing:-.02em}
+.badge{padding:3px 12px;border-radius:999px;font-size:12px;font-weight:700;color:#fff;background:var(--muted);text-transform:uppercase}
+.low{background:var(--low)}.medium{background:var(--med)}.high{background:var(--high)}
+.meter{height:16px;border-radius:8px;background:var(--line);overflow:hidden;margin:12px 0 6px}
+.fill{height:100%;width:0;background:var(--low);transition:width .5s,background .3s}
+.wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em;text-align:left;padding:10px;border-bottom:2px solid var(--line)}
+td{padding:11px 10px;border-bottom:1px solid var(--line)}
+tr:hover td{background:rgba(127,127,160,.08)}
+.pill{padding:2px 10px;border-radius:999px;font-weight:700;font-size:13px}
+.p1{background:#fee2e2;color:#b91c1c}.p2{background:#fef3c7;color:#b45309}.p3{background:#e0e7ff;color:#4338ca}
+.note{color:var(--muted);font-size:13px;margin:14px 0 0}
+</style></head><body>
+<header><h1>CI Radar</h1><p>Build failure risk and slow-build alerts for public GitHub projects</p></header>
+<main>
+<div class="grid kpis">
+<div class="card kpi"><small>Builds analysed</small><b>13,886</b><em>4 repos, Mar to Aug 2026</em></div>
+<div class="card kpi"><small>Failure rate</small><b>10.1%</b><em>share of builds that failed</em></div>
+<div class="card kpi"><small>Model PR-AUC</small><b>0.555</b><em>baseline 0.435, random 0.104</em></div>
+<div class="card kpi"><small>Slow-build alerts</small><b id="nalerts">-</b><em>top outliers listed below</em></div>
+</div>
+<div class="card" style="margin-bottom:16px">
+<h2>Failure risk for the next build</h2>
+<div class="row">
+<label>Repository<select id="repo"><option>pandas-dev/pandas</option><option>numpy/numpy</option><option>pallets/flask</option><option>scikit-learn/scikit-learn</option></select></label>
+<label>Recent failure rate: <span id="rv">10%</span><input id="rate" type="range" min="0" max="1" step="0.05" value="0.1"></label>
+<label class="check"><input id="pr" type="checkbox"> Pull request</label>
+<label class="check"><input id="prev" type="checkbox"> Previous build failed</label>
+<button onclick="go()">Predict risk</button>
+</div>
+<div class="result"><b id="risk">-</b><span id="lab" class="badge">no prediction yet</span></div>
+<div class="meter"><div id="fill" class="fill"></div></div>
+<p class="note">Low below 15%, medium 15 to 30%, high above 30%.</p>
+</div>
+<div class="card">
+<h2>Slow-build alerts</h2>
+<div class="wrap"><table><thead><tr><th>Repository</th><th>Started (UTC)</th><th>Duration</th><th>Usual</th><th>Slower by</th></tr></thead><tbody id="tbl"></tbody></table></div>
+<p class="note">Flagged by Isolation Forest against the repo&rsquo;s previous 20 builds. Some long runs may be re-runs, so treat them as leads to check.</p>
+</div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const dur=s=>s>=3600?(s/3600).toFixed(1)+' h':s>=60?Math.round(s/60)+' min':Math.round(s)+' s';
+$('rate').oninput=()=>{$('rv').textContent=Math.round($('rate').value*100)+'%'};
+async function go(){
+  const r=parseFloat($('rate').value);
+  const body={repo:$('repo').value,fail_rate_last10:r,fail_rate_last50:r,
+    is_pr:$('pr').checked?1:0,prev_failed:$('prev').checked?1:0};
+  const res=await fetch('/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const d=await res.json();
+  $('risk').textContent=Math.round(d.risk*100)+'%';
+  $('lab').textContent=d.label+' risk';
+  $('lab').className='badge '+d.label;
+  $('fill').style.width=Math.min(100,d.risk*100)+'%';
+  $('fill').style.background='var(--'+(d.label==='low'?'low':d.label==='medium'?'med':'high')+')';
+}
+async function load(){
+  const rows=await (await fetch('/alerts')).json();
+  $('nalerts').textContent=rows.length;
+  const cls=x=>x>=40?'p1':x>=20?'p2':'p3';
+  $('tbl').innerHTML=rows.map(r=>`<tr><td>${r.repo}</td><td>${r.started_at.slice(0,16)}</td><td>${dur(r.duration_s)}</td><td>${dur(r.median_prior)}</td><td><span class="pill ${cls(r.ratio)}">${Math.round(r.ratio)}x</span></td></tr>`).join('');
+}
+load();go();
+</script></body></html>
