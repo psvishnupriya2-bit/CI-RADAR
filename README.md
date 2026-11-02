@@ -57,3 +57,8 @@ flowchart LR
   F --> K
   K --> L[Render]
 ```
+
+## Seven repos (django, requests, fastapi added)
+- Test results on all 7 repos: PR-AUC 0.456, precision 0.573, recall 0.326, F1 0.415 (threshold 0.30 chosen on validation). Class weights hurt: PR-AUC 0.358.
+- PR-AUC by repo: requests 0.929, numpy 0.867, fastapi 0.264, pandas 0.224, flask 0.220, django 0.110, scikit-learn 0.080.
+- The model is strong on numpy and requests and weak on the other repos. The 0.555 result above is the 4-repo model, which is the one deployed.
