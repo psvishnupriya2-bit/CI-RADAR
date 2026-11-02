@@ -31,3 +31,11 @@ All runs are tracked in MLflow. The model is registered as ci-radar-risk and is 
 - Most important features by average SHAP impact: is_pr 1.06, fail_rate_last10 0.54, repo 0.41, fail_rate_last50 0.27. builds_in_window had no effect.
 - Example: the highest-risk build in a sample (risk 0.80) was a flask build with a 56% failure rate over the last 50 builds.
 - Chart: notebooks/shap_importance.png
+
+## Flaky candidates by workflow (sql/flaky_by_workflow.sql)
+- Same workflow, same commit, both a pass and a fail (builds Mar to Aug 2026):
+  - scikit-learn/scikit-learn: 17 commits
+  - pallets/flask: 1 commits
+  - numpy/numpy: 1 commits
+  - pandas-dev/pandas: 1 commits
+- Still not per-test flakiness: a re-run after an infrastructure error also counts.
