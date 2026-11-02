@@ -26,3 +26,8 @@ All runs are tracked in MLflow. The model is registered as ci-radar-risk and is 
 - Class weights did not help: PR-AUC 0.546, precision 0.738, recall 0.417, F1 0.533.
 - PR-AUC by repo: numpy 0.917, flask 0.265, pandas 0.228, scikit-learn 0.064. The overall score is carried mostly by numpy. Flask (12 failures) and scikit-learn (17 failures) are noisy.
 - Precision-recall curve: notebooks/pr_curve.png
+
+## Explainability (SHAP)
+- Most important features by average SHAP impact: is_pr 1.06, fail_rate_last10 0.54, repo 0.41, fail_rate_last50 0.27. builds_in_window had no effect.
+- Example: the highest-risk build in a sample (risk 0.80) was a flask build with a 56% failure rate over the last 50 builds.
+- Chart: notebooks/shap_importance.png
