@@ -32,7 +32,7 @@ All runs are tracked in MLflow. The model is registered as ci-radar-risk and is 
 - Example: the highest-risk build in a sample (risk 0.80) was a flask build with a 56% failure rate over the last 50 builds.
 - Chart: notebooks/shap_importance.png
 
-## Flaky candidates by workflow (sql/flaky_by_workflow.sql)
+## Flaky candidates by workflow, 4 repos (older run)
 - Same workflow, same commit, both a pass and a fail (builds Mar to Aug 2026):
   - scikit-learn/scikit-learn: 17 commits
   - pallets/flask: 1 commits
@@ -62,3 +62,14 @@ flowchart LR
 - Test results on all 7 repos: PR-AUC 0.456, precision 0.573, recall 0.326, F1 0.415 (threshold 0.30 chosen on validation). Class weights hurt: PR-AUC 0.358.
 - PR-AUC by repo: requests 0.929, numpy 0.867, fastapi 0.264, pandas 0.224, flask 0.220, django 0.110, scikit-learn 0.080.
 - The model is strong on numpy and requests and weak on the other repos. The 0.555 result above is the 4-repo model, which is the one deployed.
+
+## Flaky candidates by workflow (sql/flaky_by_workflow.sql)
+- Same workflow, same commit, both a pass and a fail (builds Mar to Aug 2026):
+  - fastapi/fastapi: 40 commits
+  - scikit-learn/scikit-learn: 17 commits
+  - django/django: 14 commits
+  - psf/requests: 2 commits
+  - pallets/flask: 1 commits
+  - numpy/numpy: 1 commits
+  - pandas-dev/pandas: 1 commits
+- Still not per-test flakiness: a re-run after an infrastructure error also counts.
