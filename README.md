@@ -39,3 +39,21 @@ All runs are tracked in MLflow. The model is registered as ci-radar-risk and is 
   - numpy/numpy: 1 commits
   - pandas-dev/pandas: 1 commits
 - Still not per-test flakiness: a re-run after an infrastructure error also counts.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  A[GitHub Actions API] --> B[Python loader]
+  B --> C[(Postgres)]
+  C --> D[SQL features: CTEs, window functions]
+  D --> E[LightGBM failure model]
+  D --> F[Isolation Forest slow builds]
+  D --> G[K-means and PCA]
+  D --> H[SARIMA forecast]
+  E --> I[MLflow tracking and registry]
+  E --> J[SHAP explanations]
+  I --> K[FastAPI and dashboard]
+  F --> K
+  K --> L[Render]
+```
