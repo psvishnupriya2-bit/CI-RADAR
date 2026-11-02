@@ -73,3 +73,5 @@ flowchart LR
   - numpy/numpy: 1 commits
   - pandas-dev/pandas: 1 commits
 - Still not per-test flakiness: a re-run after an infrastructure error also counts.
+
+- Correction: the earlier commit-level count (about 751) was too high, because one commit runs several workflows. Comparing only the same workflow on the same commit gives 76 commits across 7 repos. Most come from bot or check workflows (Smokeshow, PR Quality Checks, Check Changelog), which often pass after a pull request text edit. Real test workflows show only a few (scikit-learn Unit tests 2, numpy 1, pandas 1, flask 1).
