@@ -61,7 +61,7 @@ flowchart LR
 ## Seven repos (django, requests, fastapi added)
 - Test results on all 7 repos: PR-AUC 0.456, precision 0.573, recall 0.326, F1 0.415 (threshold 0.30 chosen on validation). Class weights hurt: PR-AUC 0.358.
 - PR-AUC by repo: requests 0.929, numpy 0.867, fastapi 0.264, pandas 0.224, flask 0.220, django 0.110, scikit-learn 0.080.
-- The model is strong on numpy and requests and weak on the other repos. The 0.555 result above is the 4-repo model, which is the one deployed.
+- The model is strong on numpy and requests and weak on the other repos. The 0.555 result above is the earlier 4-repo model. The live dashboard now serves the 7-repo model (PR-AUC 0.456).
 
 ## Flaky candidates by workflow (sql/flaky_by_workflow.sql)
 - Same workflow, same commit, both a pass and a fail (builds Mar to Aug 2026):
